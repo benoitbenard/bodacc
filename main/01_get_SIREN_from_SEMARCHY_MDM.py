@@ -22,15 +22,16 @@ from bodacc.utils.utils_logging import initialiser_logging
 
 QUERY_EXPORT = """
     SELECT
-        id AS EMETTEUR_ID,
-        code_siren AS CODE_SIREN,
-        code_siret AS CODE_SIRET,
-        matricule_picris_ccpma as MATRICULE_PICRIS_CCPMA,
-        matricule_picris_cpcea as MATRICULE_PICRIS_CPCEA,
-        matricule_picris_agri as MATRICULE_PICRIS_AGRI
-    FROM semarchy_mdm.gd_etablissement
-    WHERE code_siren IS NOT NULL
-    AND   b_error_status is null
+        e.id AS EMETTEUR_ID,
+        e.code_siren AS CODE_SIREN,
+        e.code_siret AS CODE_SIRET,
+        e.matricule_picris_ccpma as MATRICULE_PICRIS_CCPMA,
+        e.matricule_picris_cpcea as MATRICULE_PICRIS_CPCEA,
+        e.matricule_picris_agri as MATRICULE_PICRIS_AGRI
+    FROM semarchy_mdm.gd_etablissement e
+    inner join semarchy_mdm.USR_ETABLISSEMENT_COUVERTURE couv on couv.F_ETABLISSEMENT = e.ID AND (couv.FCLI_AGRI > 0 OR couv.FCLI_CPCEA > 0 OR couv.FCLI_CCPMA > 0)
+    WHERE e.code_siren IS NOT NULL
+    AND   e.b_error_status is null
 """
 
 
