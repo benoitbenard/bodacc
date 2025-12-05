@@ -30,7 +30,6 @@ from bodacc.utils.utils_load_config_ini import charger_configuration
 from bodacc.utils.utils_logging import initialiser_logging
 
 COLUMN_MAP: List[tuple[str, Sequence[str]]] = [
-    ("TOPAGE_DDJC", ["topage_DDJC"]),
     ("ID ANNONCE", ["id"]),
     ("NUMERO ANNONCE", ["numeroannonce"]),
     ("DATE PARUTION", ["dateparution"]),
@@ -101,6 +100,16 @@ def _collect_values(obj, parts: Sequence[str]) -> List[str]:
     if isinstance(obj, dict):
         return _collect_values(obj.get(head), tail)
 
+    if isinstance(obj, str):
+        # Certaines clés (ex. "jugement", "listepersonnes") sont stockées sous
+        # forme de chaîne JSON. On tente un décodage pour accéder aux champs
+        # imbriqués.
+        try:
+            loaded = json.loads(obj)
+        except json.JSONDecodeError:
+            return []
+        return _collect_values(loaded, parts)
+
     return []
 
 
@@ -139,7 +148,7 @@ def _generate_week_excel(week: str, files: List[Path], target_dir: Path) -> None
             rows.append(_build_row(record))
 
     df = pd.DataFrame(rows, columns=[col for col, _ in COLUMN_MAP])
-    target_path = target_dir / f"{week}_BODACC.xlsx"
+    target_path = target_dir / f"{week}_BODACC_DDJC.xlsx"
     with pd.ExcelWriter(target_path, engine="openpyxl") as writer:
         df.to_excel(writer, index=False, sheet_name="BODACC")
     logging.info("Classeur généré : %s (%d lignes)", target_path, len(df))
