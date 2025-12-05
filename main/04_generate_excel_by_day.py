@@ -33,7 +33,12 @@ COLUMN_MAP: List[tuple[str, Sequence[str]]] = [
     ("ID ANNONCE", ["id"]),
     ("NUMERO ANNONCE", ["numeroannonce"]),
     ("DATE PARUTION", ["dateparution"]),
-    ("SIREN", ["SIREN"]),
+    (
+        "NUMERO_IDENTIFICATION",
+        ["listepersonnes/personne/numeroIdentification", "listepersonnes/personne/numeroImmatriculation/numeroIdentification"],
+    ),
+    ("DENOMINATION", ["listepersonnes/personne/denomination"]),
+    ("ACTIVITE", ["listepersonnes/personne/activite"]),
     ("MATRICULE_CCPMA", ["MATRICULE_CCPMA", "MATRICULE_PICRIS_CCPMA"]),
     ("MATRICULE_CPCEA", ["MATRICULE_CPCEA", "MATRICULE_PICRIS_CPCEA"]),
     ("MATRICULE_AGRI", ["MATRICULE_AGRI", "MATRICULE_PICRIS_AGRI"]),
