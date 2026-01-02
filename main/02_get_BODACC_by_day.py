@@ -21,9 +21,9 @@ from typing import Dict, Iterable, List, Optional
 import pandas as pd
 import requests
 
-from bodacc.utils.utils_get_directories import get_tmp_dir
-from bodacc.utils.utils_load_config_ini import charger_configuration
-from bodacc.utils.utils_logging import initialiser_logging
+from utils.utils_get_directories import get_tmp_dir
+from utils.utils_load_config_ini import charger_configuration
+from utils.utils_logging import initialiser_logging
 
 PUBLICATION_TYPES = ("A", "B", "C")
 

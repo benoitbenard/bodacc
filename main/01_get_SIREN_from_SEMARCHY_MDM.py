@@ -13,11 +13,11 @@ import logging
 import traceback
 import argparse
 
-from bodacc.utils.utils_cnx_oracle import connecter_a_oracle, lire_oracle_dataframe
-from bodacc.utils.utils_cnx_csv import exporter_dataframe_csv
-from bodacc.utils.utils_get_directories import get_tmp_dir
-from bodacc.utils.utils_load_config_ini import charger_configuration
-from bodacc.utils.utils_logging import initialiser_logging
+from utils.utils_cnx_oracle import connecter_a_oracle, lire_oracle_dataframe
+from utils.utils_cnx_csv import exporter_dataframe_csv
+from utils.utils_get_directories import get_tmp_dir
+from utils.utils_load_config_ini import charger_configuration
+from utils.utils_logging import initialiser_logging
 
 
 QUERY_EXPORT = """

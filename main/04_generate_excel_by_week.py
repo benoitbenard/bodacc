@@ -22,12 +22,13 @@ import traceback
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Sequence
-
+from openpyxl.worksheet.table import Table, TableStyleInfo
+from openpyxl import load_workbook
 import pandas as pd
 
-from bodacc.utils.utils_get_directories import get_output_dir
-from bodacc.utils.utils_load_config_ini import charger_configuration
-from bodacc.utils.utils_logging import initialiser_logging
+from utils.utils_get_directories import get_output_dir
+from utils.utils_load_config_ini import charger_configuration
+from utils.utils_logging import initialiser_logging
 
 COLUMN_MAP: List[tuple[str, Sequence[str]]] = [
     ("ID ANNONCE", ["id"]),
@@ -53,6 +54,96 @@ COLUMN_MAP: List[tuple[str, Sequence[str]]] = [
     ("PRENOM", ["listepersonnes/personne/prenom"]),
     ("URL", ["url_complete"]),
 ]
+
+from openpyxl import load_workbook
+from openpyxl.utils import get_column_letter
+from openpyxl.styles import Alignment
+
+
+from openpyxl import load_workbook
+from openpyxl.styles import Font
+
+def convertir_colonne_url_en_hyperliens(fichier_excel: str, feuille: str = "BODACC", colonne_index: int = 19):
+    """
+    Transforme une colonne contenant des URL en véritables hyperliens Excel.
+    colonne_index : 1-based (colonne A=1, B=2, ..., S=19)
+    """
+    wb = load_workbook(fichier_excel)
+    ws = wb[feuille]
+
+    for row in ws.iter_rows(min_row=2):  # on saute l’en-tête
+        cell = row[colonne_index - 1]
+        url = str(cell.value).strip() if cell.value else ""
+        if url.startswith("http"):
+            cell.hyperlink = url
+            cell.value = "Lien vers annonce"
+            cell.style = "Hyperlink"  # Style bleu souligné par défaut
+            cell.font = Font(underline="single", color="0563C1")  # en cas de style non pris
+        else:
+            continue
+
+    wb.save(fichier_excel)
+    wb.close()
+
+def mettre_en_forme_excel(
+    fichier_excel: str,
+    feuille: str = "BODACC",
+    auto_largeur: bool = True,
+    wrap_text: bool = True
+) -> None:
+    wb = load_workbook(fichier_excel)
+    ws = wb[feuille]
+
+    for row in ws.iter_rows():
+        for cell in row:
+            # Renvoi à la ligne automatique
+            if wrap_text:
+                cell.alignment = Alignment(wrapText=True, vertical="top")
+
+    if auto_largeur:
+        # Calcul automatique de la largeur des colonnes
+        for col_idx, column_cells in enumerate(ws.columns, start=1):
+            max_length = 0
+            for cell in column_cells:
+                try:
+                    if cell.value:
+                        cell_length = len(str(cell.value))
+                        max_length = max(max_length, cell_length)
+                except Exception:
+                    pass
+            adjusted_width = min((max_length + 2), 80)  # limite max largeur
+            col_letter = get_column_letter(col_idx)
+            ws.column_dimensions[col_letter].width = adjusted_width
+
+    wb.save(fichier_excel)
+    wb.close()
+
+
+def convertir_feuille_en_table_excel(fichier_excel: Path, feuille: str, nom_table: str = "BODACC"):
+    wb = load_workbook(fichier_excel)
+    ws = wb[feuille]
+
+    # Détection automatique de la plage (A1 jusqu'à la dernière cellule)
+    max_row = ws.max_row
+    max_col = ws.max_column
+    last_col_letter = ws.cell(row=1, column=max_col).column_letter
+    table_range = f"A1:{last_col_letter}{max_row}"
+
+    table = Table(displayName=nom_table, ref=table_range)
+
+    # Style de tableau Excel
+    style = TableStyleInfo(
+        name="TableStyleMedium9",  # ou TableStyleLight9, Medium2, etc.
+        showFirstColumn=False,
+        showLastColumn=False,
+        showRowStripes=True,
+        showColumnStripes=False,
+    )
+    table.tableStyleInfo = style
+
+    ws.add_table(table)
+    wb.save(fichier_excel)
+    wb.close()
 
 
 def _load_bodacc_jsonl(path: Path) -> List[Dict]:
@@ -147,16 +238,29 @@ def _ensure_filtered_dir(config) -> Path:
 
 
 def _generate_week_excel(week: str, files: List[Path], target_dir: Path) -> None:
+    target_path = target_dir / f"{week}_BODACC_DDJC.xlsx"
+    if target_path.exists():
+        logging.info(f"Fichier déjà présent, génération ignorée : {target_path}")
+        return    
+
     rows: List[Dict[str, str]] = []
     for file in files:
         for record in _load_bodacc_jsonl(file):
             rows.append(_build_row(record))
 
     df = pd.DataFrame(rows, columns=[col for col, _ in COLUMN_MAP])
-    target_path = target_dir / f"{week}_BODACC_DDJC.xlsx"
+
+    # Écriture initiale
     with pd.ExcelWriter(target_path, engine="openpyxl") as writer:
         df.to_excel(writer, index=False, sheet_name="BODACC")
-    logging.info("Classeur généré : %s (%d lignes)", target_path, len(df))
+
+    # Conversion en tableau structuré
+    convertir_feuille_en_table_excel(fichier_excel=target_path, feuille="BODACC")
+    mettre_en_forme_excel(fichier_excel=target_path, feuille="BODACC")
+    convertir_colonne_url_en_hyperliens(fichier_excel=target_path, feuille="BODACC", colonne_index=19)
+
+    logging.info("Classeur généré (tableau Excel) : %s (%d lignes)", target_path, len(df))
+
 
 
 def main():
