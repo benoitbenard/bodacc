@@ -17,11 +17,11 @@ if NOT "%ARG_CONFIG%"=="" (
 
 echo.
 echo ===========================================================
-echo ========   Lancement du pipeline BODACC (01→03)   ========
+echo ========   Lancement du pipeline BODACC (01→04)   ========
 echo ===========================================================
 
 echo.
-set MODULES=bodacc.main.01_get_SIREN_from_SEMARCHY_MDM bodacc.main.02_get_BODACC_by_day bodacc.main.03_filter_BODACC_by_day
+set MODULES=main.01_get_SIREN_from_SEMARCHY_MDM main.02_get_BODACC_by_day main.03_filter_BODACC_by_day main.04_generate_excel_by_week
 
 for %%M in (%MODULES%) do (
     echo -----------------------------------------------------------
@@ -57,7 +57,7 @@ for %%M in (%MODULES%) do (
 )
 
 echo ===========================================================
-echo =========   Pipeline AfterData terminé avec succès   ========
+echo =========   Pipeline BODACC terminé avec succès   ========
 echo ===========================================================
 echo.
 
