@@ -20,6 +20,7 @@ import logging
 import sys
 import traceback
 from datetime import datetime
+from datetime import date
 from pathlib import Path
 from typing import Dict, List, Sequence
 from openpyxl.worksheet.table import Table, TableStyleInfo
@@ -62,6 +63,16 @@ from openpyxl.styles import Alignment
 
 from openpyxl import load_workbook
 from openpyxl.styles import Font
+
+
+def fin_semaine_iso(iso_year: int, iso_week: int) -> date:
+    """
+    Retourne la date du dimanche de la semaine ISO donnée.
+    """
+    # Lundi de la semaine ISO
+    lundi = date.fromisocalendar(iso_year, iso_week, 1)
+    # Dimanche
+    return lundi + timedelta(days=6)
 
 def convertir_colonne_url_en_hyperliens(fichier_excel: str, feuille: str = "BODACC", colonne_index: int = 19):
     """
@@ -293,8 +304,23 @@ def main():
                 "Vérifiez le répertoire ou exécutez l'étape 03."
             )
 
+        aujourdhui = date.today()
         for week, files in sorted(weekly_files.items()):
-            _generate_week_excel(week, files, output_dir)
+            iso_year, iso_week = week.split("-W")
+            iso_year = int(iso_year)
+            iso_week = int(iso_week)
+
+            date_fin_semaine = fin_semaine_iso(iso_year, iso_week)
+
+            if aujourdhui > date_fin_semaine:
+                _generate_week_excel(week, files, output_dir)
+            else:
+                logging.info(
+                    "Semaine %s non complète (fin le %s) → génération ignorée",
+                    week,
+                    date_fin_semaine.isoformat(),
+                )
+
 
     except Exception:
         logging.error("Erreur critique pendant la génération des Excel BODACC.")

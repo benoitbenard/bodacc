@@ -281,8 +281,21 @@ def main():
             raise ValueError("URL API BODACC manquante dans [general] API_URL")
 
         today = dt.date.today()
-        start_date = _parse_date(args.start_date) if args.start_date else today - dt.timedelta(days=default_depth)
-        end_date = _parse_date(args.end_date) if args.end_date else today
+        yesterday = today - dt.timedelta(days=1)
+
+        start_date = (
+            _parse_date(args.start_date)
+            if args.start_date
+            else yesterday - dt.timedelta(days=default_depth - 1)
+        )
+        end_date = _parse_date(args.end_date) if args.end_date else yesterday
+        if end_date >= today:
+            logging.info(
+                "Date de fin (%s) >= aujourd’hui (%s) → ajustement à J-1",
+                end_date,
+                today,
+            )
+            end_date = yesterday        
 
         if start_date > end_date:
             raise ValueError("La date de début est postérieure à la date de fin")

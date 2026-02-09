@@ -31,7 +31,7 @@ QUERY_EXPORT = """
     FROM semarchy_mdm.gd_etablissement e
     inner join semarchy_mdm.USR_ETABLISSEMENT_COUVERTURE couv on couv.F_ETABLISSEMENT = e.ID AND (couv.FCLI_AGRI > 0 OR couv.FCLI_CPCEA > 0 OR couv.FCLI_CCPMA > 0)
     WHERE e.code_siren IS NOT NULL
-    AND   e.b_error_status is null
+    AND   (e.b_error_status is null or e.b_error_status = 'VALID')
 """
 
 
